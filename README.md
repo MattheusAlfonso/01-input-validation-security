@@ -22,7 +22,6 @@ Result: The backend neutralizes the executable script and safely renders the pla
 
 1. Clone this repository into your local web server environment (e.g., XAMPP htdocs or LAMP /var/www/html/).
 2. Start the Apache service.
-
 3.Access http://localhost/01-input-validation-security/Projeto1.php in your browser.
 
 Developed as part of the Cybersecurity Portfolio for international software & threat analysis roles.

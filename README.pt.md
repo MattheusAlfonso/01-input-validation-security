@@ -1,6 +1,12 @@
+[ 🇺🇸 English ](README.md) | [ 🇪🇸 Español ](README.es.md) | [ 🇧🇷 Português ](README.pt.md)
+
+---
+
 #  Validador & Sanitizador Seguro de Inputs (PHP/HTML5)
 
-Uma aplicação web leve desenvolvida em PHP e HTML5 para demonstrar técnicas de higienização de dados de entrada e mecanismos de defesa contra ataques de Cross-Site Scripting (XSS) e manipulação de parâmetros.
+![Project Preview](preview.png)
+
+Uma aplicação web leve desenvolvida em PHP e HTML5 para demonstrar técnicas de higienização de dados de entrada...
 
 ##  Propósito e Escopo
 Este projeto serve como uma implementação prática de processamento seguro de dados de entrada em ambientes web. Ele simula um formulário de análise de ameaças onde os dados enviados pelo usuário são estritamente sanitizados e validados no lado do servidor antes de serem exibidos ou processados.

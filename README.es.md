@@ -1,6 +1,12 @@
+[ 🇺🇸 English ](README.md) | [ 🇪🇸 Español ](README.es.md) | [ 🇧🇷 Português ](README.pt.md)
+
+---
+
 #  Motor de Validación y Sanitización Segura de Inputs (PHP/HTML5)
 
-Una aplicación web desarrollada con PHP y HTML5 diseñada para demostrar mecanismos de sanitización y defensa contra ataques de Cross-Site Scripting (XSS) y manipulación de parámetros.
+![Project Preview](preview.png)
+
+Una aplicación web desarrollada con PHP y HTML5 diseñada para demostrar mecanismos de sanitización...
 
 ##  Propósito y Alcance
 Este proyecto sirve como una implementación práctica de procesamiento seguro de datos de entrada en entornos web. Simula un formulario de análisis de amenazas donde las entradas del usuario son sanitizadas y validadas en el lado del servidor antes de ser mostradas o procesadas.

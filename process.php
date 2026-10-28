@@ -1,19 +1,16 @@
 <?php
-// Se não for POST, redireciona de volta para o formulário
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: Projeto1.php');
     exit();
 }
 
-// 1. Sanitização dos textos contra XSS
 $username   = isset($_POST['username']) ? htmlspecialchars(trim($_POST['username']), ENT_QUOTES, 'UTF-8') : '';
 $target_url = isset($_POST['target_url']) ? htmlspecialchars(trim($_POST['target_url']), ENT_QUOTES, 'UTF-8') : '';
 
-// 2. Validação de E-mail
 $raw_email   = $_POST['email'] ?? '';
 $clean_email = filter_var($raw_email, FILTER_VALIDATE_EMAIL);
 
-// 3. Verificação do Checkbox de Termos
 $terms_accepted = isset($_POST['terms']) && $_POST['terms'] === 'accepted';
 ?>
 <!DOCTYPE html>

@@ -1,10 +1,12 @@
 [ 🇺🇸 English ](README.md) | [ 🇪🇸 Español ](README.es.md) | [ 🇧🇷 Português ](README.pt.md)
 
 ---
+
 #  Secure Input Validation & Sanitization Engine (PHP/HTML5)
 
-A lightweight web application built with PHP and HTML5 designed to demonstrate input sanitization and defense mechanisms against Cross-Site Scripting (XSS) and parameter manipulation attacks.
+![Project Preview](preview.png)
 
+A lightweight web application built with PHP and HTML5 designed to demonstrate input sanitization and defense mechanisms against Cross-Site Scripting (XSS) and parameter manipulation attacks.
 ##  Purpose & Scope
 This project serves as a practical implementation of secure input processing in web environments. It simulates a threat analysis form where user inputs are strictly sanitized and validated on the server side before rendering or processing.
 

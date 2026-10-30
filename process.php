@@ -1,17 +1,45 @@
 <?php
+require_once 'security.php';
+
+send_security_headers();
+start_secure_session();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: Projeto1.php');
     exit();
 }
 
-$username   = isset($_POST['username']) ? htmlspecialchars(trim($_POST['username']), ENT_QUOTES, 'UTF-8') : '';
-$target_url = isset($_POST['target_url']) ? htmlspecialchars(trim($_POST['target_url']), ENT_QUOTES, 'UTF-8') : '';
+if (!csrf_is_valid($_POST['csrf_token'] ?? null)) {
+    http_response_code(403);
+    exit('Requisição inválida (token CSRF ausente ou incorreto).');
+}
 
-$raw_email   = $_POST['email'] ?? '';
-$clean_email = filter_var($raw_email, FILTER_VALIDATE_EMAIL);
+// 1) VALIDAÇÃO na entrada (allowlist): rejeita o que não está no formato esperado.
+// 2) ENCODING na saída: e() é aplicado só no HTML, então o dado original nunca é alterado.
+
+$username       = trim((string)($_POST['username'] ?? ''));
+$username_valid = preg_match('/^[A-Za-z0-9_.-]{3,32}$/', $username) === 1;
+
+$email       = trim((string)($_POST['email'] ?? ''));
+$email_valid = strlen($email) <= 254 && filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+
+// A URL é tratada como um artefato suspeito: só http/https são aceitos,
+// bloqueando esquemas perigosos como javascript: e data:
+$target_url = trim((string)($_POST['target_url'] ?? ''));
+$url_scheme = strtolower((string)parse_url($target_url, PHP_URL_SCHEME));
+$url_valid  = strlen($target_url) <= 2048
+    && filter_var($target_url, FILTER_VALIDATE_URL) !== false
+    && in_array($url_scheme, ['http', 'https'], true);
+$url_host   = $url_valid ? (string)parse_url($target_url, PHP_URL_HOST) : '';
 
 $terms_accepted = isset($_POST['terms']) && $_POST['terms'] === 'accepted';
+
+function status(bool $ok, string $okText, string $failText): string
+{
+    return $ok
+        ? '<span class="ok">✓ ' . e($okText) . '</span>'
+        : '<span class="fail">✗ ' . e($failText) . '</span>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -19,32 +47,29 @@ $terms_accepted = isset($_POST['terms']) && $_POST['terms'] === 'accepted';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultado da Análise - Security Output</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h2>Relatório de Análise de Input</h2>
-        <p>Dados higienizados e validados pelo backend PHP</p>
-        
-        <div style="background: #0f172a; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-            <p style="text-align: left; margin: 8px 0;"><strong>Usuário (Sanitizado):</strong><br><code><?= $username ?></code></p>
-            
-            <p style="text-align: left; margin: 8px 0;"><strong>E-mail (Validado):</strong><br>
-            <?php if ($clean_email): ?>
-                <span style="color: #4ade80;">✓ <?= htmlspecialchars($clean_email, ENT_QUOTES, 'UTF-8') ?></span>
-            <?php else: ?>
-                <span style="color: #f87171;">✗ Formato de E-mail Inválido!</span>
-            <?php endif; ?>
-            </p>
+        <p>Dados validados (allowlist) no backend e codificados na saída</p>
 
-            <p style="text-align: left; margin: 8px 0;"><strong>URL Analisada:</strong><br><code><?= $target_url ?></code></p>
-            
-            <p style="text-align: left; margin: 8px 0;"><strong>Termos de Uso:</strong><br>
-            <?= $terms_accepted ? '<span style="color: #4ade80;">✓ Confirmado</span>' : '<span style="color: #f87171;">✗ Não Aceito</span>' ?>
-            </p>
+        <div class="report">
+            <p><strong>Usuário:</strong> <?= status($username_valid, 'Formato válido', 'Rejeitado: use 3 a 32 caracteres (letras, números, _ . -)') ?><br>
+            <code><?= e($username) ?></code></p>
+
+            <p><strong>E-mail:</strong> <?= status($email_valid, 'Formato válido', 'Formato de e-mail inválido') ?><br>
+            <code><?= e($email) ?></code></p>
+
+            <p><strong>URL Analisada:</strong> <?= status($url_valid, 'URL http(s) válida', 'Rejeitada: apenas URLs http/https são aceitas') ?><br>
+            <code><?= e($target_url) ?></code>
+            <?php if ($url_valid): ?><br>Domínio: <code><?= e($url_host) ?></code><?php endif; ?></p>
+
+            <p><strong>Termos de Uso:</strong><br>
+            <?= status($terms_accepted, 'Confirmado', 'Não aceito') ?></p>
         </div>
 
-        <a href="Projeto1.php" style="display: block; text-align: center; color: #38bdf8; text-decoration: none; font-weight: bold;">← Voltar ao Formulário</a>
+        <a href="Projeto1.php" class="back-link">← Voltar ao Formulário</a>
     </div>
 </body>
 </html>

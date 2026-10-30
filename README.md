@@ -2,31 +2,69 @@
 
 ---
 
-#  Secure Input Validation & Sanitization Engine (PHP/HTML5)
+# Secure Input Validation & Output Encoding (PHP)
+
+![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
+![OWASP](https://img.shields.io/badge/OWASP-A03%20Injection-red)
+![Focus](https://img.shields.io/badge/focus-AppSec-0284c7)
+
+A small PHP web app that shows the two habits that stop most injection bugs: **validate input against an allowlist** and **encode output for the context where it is displayed**. It simulates an analyst form where a username, an e-mail and a *suspicious URL* are submitted for inspection.
 
 ![Project Preview](preview.png)
 
-A lightweight web application built with PHP and HTML5 designed to demonstrate input sanitization and defense mechanisms against Cross-Site Scripting (XSS) and parameter manipulation attacks.
-##  Purpose & Scope
-This project serves as a practical implementation of secure input processing in web environments. It simulates a threat analysis form where user inputs are strictly sanitized and validated on the server side before rendering or processing.
+## Threat model
 
-##  Security Features Implemented
-**XSS Mitigation:** Utilization of `htmlspecialchars()` with `ENT_QUOTES` and `UTF-8` encoding to prevent Reflected and Stored Cross-Site Scripting.
-**Email Validation:** Native PHP filtering via `filter_var(..., FILTER_VALIDATE_EMAIL)` to enforce RFC compliance.
-**HTTP Method Enforcement:** Enforces `POST` request method for data transmission, preventing sensitive data exposure via URL/GET query strings or HTTP access logs.
-**Strict State Checking:** Server-side verification for terms acceptance using strict comparison operators (`===`).
+| Threat | OWASP Top 10 (2021) | Mitigation | Where |
+|---|---|---|---|
+| Reflected XSS via form fields | A03 Injection | Context-aware output encoding with `htmlspecialchars(ENT_QUOTES \| ENT_SUBSTITUTE, 'UTF-8')` at render time | `security.php` → `e()` |
+| Malformed or oversized input | A03 Injection | Server-side allowlist: regex for username, `FILTER_VALIDATE_EMAIL`, length limits | `process.php` |
+| `javascript:` / `data:` URLs | A03 Injection | URL is accepted only if valid **and** its scheme is `http` or `https` | `process.php` |
+| Cross-Site Request Forgery | A01 Broken Access Control | Per-session random token checked with `hash_equals()` | `security.php` |
+| Script injection that slips through | A05 Security Misconfiguration | Strict `Content-Security-Policy` (no inline scripts or styles), `nosniff`, `X-Frame-Options: DENY` | `security.php` |
+| Session cookie theft | A07 Identification & Auth Failures | Cookie flags `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS, `use_strict_mode` | `security.php` |
 
-##  Proof of Concept (XSS Defense Test)
-When submitting an XSS payload in the username field:
-html
-<script>alert('XSS')</script>
+## Key design decision: validate on input, encode on output
 
-Result: The backend neutralizes the executable script and safely renders the plain text string as &lt;script&gt;alert('XSS')&lt;/script&gt;. No client-side JavaScript execution occurs.
+The first version escaped data **as soon as it arrived**. That works for one page, but the stored value is now HTML-specific: it breaks when reused in a URL, JSON or SQL, and gets double-escaped if displayed again. The current version keeps the original value, **rejects** what does not match the allowlist, and escapes **only when rendering HTML**.
 
-##  How to Run
+## Defense tests
 
-1. Clone this repository into your local web server environment (e.g., XAMPP htdocs or LAMP /var/www/html/).
-2. Start the Apache service.
-3.Access http://localhost/01-input-validation-security/Projeto1.php in your browser.
+Run the app (see below) and try:
 
-Developed as part of the Cybersecurity Portfolio for international software & threat analysis roles.
+| Input | Field | Expected result |
+|---|---|---|
+| `<script>alert('XSS')</script>` | Username | Rejected by the allowlist; shown as inert text |
+| `javascript:alert(1)` | URL | Rejected: only http/https URLs are accepted |
+| `analyst@@company` | E-mail | Invalid e-mail format |
+| POST without `csrf_token` | — | HTTP 403 |
+
+```bash
+# CSRF test: request without token must be refused (403)
+curl -i -X POST http://localhost:8000/process.php -d "username=test"
+```
+
+## How to run
+
+Requirements: PHP 8.0+.
+
+```bash
+git clone https://github.com/MattheusAlfonso/01-input-validation-security.git
+cd 01-input-validation-security
+php -S localhost:8000
+```
+
+Open <http://localhost:8000/Projeto1.php>.
+
+## What I learned
+
+- Escaping is not validation: `htmlspecialchars()` makes data safe **for HTML**, not safe in general.
+- Allowlists (what *is* allowed) are stronger than blocklists (what is *not*).
+- CSP is a second layer: even if an encoding bug slips through, inline scripts do not run.
+
+## Roadmap
+
+- [ ] Automated tests (PHPUnit) for every payload in the table above
+- [ ] Look up the submitted URL's domain against a threat-intel feed
+
+---
+*Part of my [cybersecurity portfolio](https://mattheusalfonso.github.io).*

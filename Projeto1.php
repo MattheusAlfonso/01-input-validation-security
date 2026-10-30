@@ -1,30 +1,38 @@
+<?php
+require_once 'security.php';
+
+send_security_headers();
+start_secure_session();
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale-1.0">
-	<title>Input Validation & Sanitization Secuirity</title>
-	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Input Validation & Sanitization Security</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
 	<div class="container">
 		<h2> Validador & Sanitizador de Inputs</h2>
-		<p>Teste  de Segurança e Prevenção de  injeção de Scripts (XSS)</p>
+		<p>Teste de Segurança e Prevenção de injeção de Scripts (XSS)</p>
 
 		<form action="process.php" method="POST">
+			<input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+
 			<div class="form-group">
 			<label for="username">Nome de Usuário:</label>
-			<input type="text" id="username" name="username" placeholder="Ex:  hackersec" required>
+			<input type="text" id="username" name="username" placeholder="Ex: hackersec" required maxlength="32" pattern="[A-Za-z0-9_.\-]{3,32}" title="3 a 32 caracteres: letras, números, _ . -">
 			</div>
 
 			<div class="form-group">
 				<label for="email">E-mail para verificação</label>
-				<input type="email"  id="email" name="email" placeholder="Ex: analista@empresas.com" required>
+				<input type="email" id="email" name="email" placeholder="Ex: analista@empresas.com" required maxlength="254">
 			</div>
 
 			<div class="form-group">
 				<label for="target_url">URL suspeita para Análise</label>
-				<input type="text" id="target_url" name="target_url" placeholder="Ex: https://site-suspeito.com/phising" required>
+				<input type="url" id="target_url" name="target_url" placeholder="Ex: https://site-suspeito.com/phishing" required maxlength="2048">
 			</div>
 
 			<div class="form-group">
